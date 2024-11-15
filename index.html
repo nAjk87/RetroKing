@@ -2,49 +2,31 @@
 <html>
     <head>
         <title>👑 Retro King 👑</title>
-        <link rel = icon href = docs/favicon.ico sizes = "16x16 32x32 48x48 64x64" type = image/vnd.microsoft.icon>
         <meta name = viewport content = "width = device-width, initial-scale = 1">
         <style>
+        
              body, html {
-                height: 100%;
                 background-color: black;
                 color: white;
             }
 
             body {
                 margin: 0;
-                overflow: hidden;
             }
 
-            body, #box, #top {
+            body, #top, #loader {
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 flex-direction: column;
             }
 
-            #box {
-                color: #aaa;
-                height: 20em;
-                width: 30em;
-                max-width: 80%;
-                max-height: 80%;
-                background-color: #333;
-                border-radius: 0.4em;
-                border: 2px solid #555;
-                position: relative;
+            #loader {
+                position: a;
+                top: 200px;
+                align-items: center;
+                justify-content: center;
                 flex-direction: column;
-                transition-duration: 0.2s;
-                overflow: hidden;
-                font-family: monospace;
-                font-weight: bold;
-                font-size: 20px;
-                margin: 5px;
-            }
-
-            #box:hover, #box[drag] {
-                border-color: #38f;
-                color: #ddd
             }
 
             #input {
@@ -84,54 +66,107 @@
             }
 
             .logo {
-                width: 130px;
-                height: 130px;
-                filter: drop-shadow(0 0 10px white);
+                background: transparent;
+                width: 260px;
+                height: 260px;
+                margin: -60px;
             }
 
             #top {
                 margin: 5px;
             }
+            #bottom {
+                margin: 5px;
+            }
+            body.custom-80s-style {
+      background-color: #1c1c3c;
+      color: #00ffcc;
+      font-family: 'Courier New', monospace;
+      text-align: center;
+    }
+    h1.custom-80s-heading {
+      color: #ff66cc;
+      text-shadow: 2px 2px #333;
+    }
+    table.custom-80s-table {
+      margin: 0 auto;
+      border-collapse: collapse;
+      width: 80%;
+      max-width: 800px;
+      background-color: #333;
+      box-shadow: 0px 0px 20px #00ffcc;
+    }
+    th.custom-80s-header, td.custom-80s-cell {
+      padding: 12px;
+      border: 1px solid #555;
+    }
+    th.custom-80s-header {
+      background-color: #ff66cc;
+      color: #1c1c3c;
+    }
+    td.custom-80s-cell {
+      text-align: left;
+    }
+    a.custom-80s-link {
+      color: #00ffcc;
+      text-decoration: none;
+    }
+    a.custom-80s-link:hover {
+      text-decoration: underline;
+    }
+
+    h2 {
+        font-size: 100px;
+        color: greenyellow;
+    }
         </style>
     </head>
 
-    <body>
-        <div id="top">
-            <h1>EmulatorJS Demo</h1>
-            <img src="docs/Logo-light.png" alt="Logo" class="logo">
+    <body class="custom-80s-style">
+        <div id= "loader" > 
+            <h2 hidden id="canbehidden">Loading, please wait </h2>
         </div>
-        <div id = box>
-            <input type = file id = input>
-            Drag ROM file or click here
+        <div height="0px">
+            <div id="top">
+            <h1>👑 Retro King 👑</h1>
+            <img src="docs/megalogo.png" class="logo">
+            </div>
         </div>
+        <div id = "bottom">
+        <table id="gamesTable" class="custom-80s-table">
+            <thead>
+              <tr>
+                <th class="custom-80s-header">Game</th>
+              </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </div>
+        <script type="module">
+            const games = await fetch('data/games.json').then(r => r.json()) 
+        
+      const tableBody = document.getElementById('gamesTable').querySelector('tbody');
 
-        <script>
-            let enableDebug = false;
-            let enableThreads = false;
+      for (const [name, url] of Object.entries(games.Games)) {
+        const row = document.createElement('tr');
+               
+        const linkCell = document.createElement('td');
+        const link = document.createElement('a');
+        link.href = "/?game="+name
+        link.textContent = name;
+        link.className = 'custom-80s-link';
+        linkCell.className = 'custom-80s-cell';
+        linkCell.appendChild(link);
+        row.appendChild(linkCell);
+
+        tableBody.appendChild(row);
+      }
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
-            if (urlParams.get('debug') == 1) {
-                enableDebug = true;
-                console.log("Debug is enabled");
-            } else {
-                console.log("Debug is disabled");
-            }
-
-            if (urlParams.get('threads') == 1) {
-                if (window.SharedArrayBuffer) {
-                    enableThreads = true;
-                    console.log("Threads are enabled");
-                } else {
-                    console.warn("Threads are disabled as SharedArrayBuffer is not available. Threads requires two headers to be set when sending you html page. See https://stackoverflow.com/a/68630724");
-                    console.log("Threads are disabled");
-                }
-            } else {
-                console.log("Threads are disabled");
-            }
             
             async function runGame(url,parts) {
                 const core = await (async (ext) => {
-                    if (["fds", "nes", "unif", "unf"].includes(ext))
+                    if (["fds", "nes", "unif", "unf","zip"].includes(ext))
                         return "nes"
 
                     if (["smc", "fig", "sfc", "gd3", "gd7", "dx2", "bsx", "swc"].includes(ext))
@@ -211,10 +246,6 @@
 
                         button.onclick = () => resolve(select[select.selectedIndex].value)
                         button.textContent = "Load game"
-                        box.innerHTML = ""
-
-                        box.appendChild(select)
-                        box.appendChild(button)
                     })
                 })(parts.pop())
 
@@ -227,8 +258,13 @@
 
                 const top = document.getElementById("top");
                 top.remove();
-                box.remove()
+                const games = document.getElementById("bottom")
+
+                games.remove()
+                const loader = document.getElementById("canbehidden")
+                loader.removeAttribute('hidden')
                 div.appendChild(sub)
+                div.appendChild(games)
                 document.body.appendChild(div)
 
                 window.EJS_player = "#game";
@@ -238,26 +274,17 @@
                 window.EJS_core = core;
                 window.EJS_pathtodata = "data/";
                 window.EJS_startOnLoaded = true;
-                window.EJS_DEBUG_XX = enableDebug;
+                window.EJS_DEBUG_XX = false;
                 window.EJS_disableDatabases = true;
-                window.EJS_threads = enableThreads;
+                window.EJS_threads = true;
 
                 script.src = "data/loader.js";
                 document.body.appendChild(script);
             }
-
-            input.onchange = async () => {
-                const url = input.files[0]
-                const parts = input.files[0].name.split(".")
-                runGame(url,parts)
-                
-            }
-            box.ondragover = () => box.setAttribute("drag", true);
-            box.ondragleave = () => box.removeAttribute("drag");
-
-            if(urlParams.get('game') === 'mario') {
-                runGame('/data/roms/mario.nes', 'mario.nes'.split("."))
-            }
+            var game = games.Games[urlParams.get('game')]
+            if(game) {
+                runGame(game,[urlParams.get('game'),"nes"])
+            }    
         </script>
     </body>
 </html>
